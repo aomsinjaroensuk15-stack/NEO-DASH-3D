@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>NEON DASH 3D 🚀</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { width:100%; height:100%; overflow:hidden; background:#05010f;
+    font-family:'Segoe UI',system-ui,sans-serif; touch-action:none; }
+  #game { position:fixed; inset:0; display:block; }
+  #hud { position:fixed; top:14px; left:0; right:0; display:flex;
+    justify-content:space-between; padding:0 20px; pointer-events:none;
+    color:#0ff; text-shadow:0 0 10px #0ff; z-index:5; }
+  #hud .box { font-size:20px; font-weight:700; letter-spacing:2px; }
+  #hud .box span { color:#f0f; text-shadow:0 0 10px #f0f; }
+  #overlay { position:fixed; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; z-index:10; text-align:center;
+    background:radial-gradient(circle at 50% 40%, rgba(80,0,120,.35), rgba(5,1,15,.92));
+    color:#fff; transition:opacity .4s; }
+  #overlay.hidden { opacity:0; pointer-events:none; }
+  #overlay h1 { font-size:clamp(40px,9vw,84px); letter-spacing:6px;
+    background:linear-gradient(90deg,#0ff,#f0f,#ff0); -webkit-background-clip:text;
+    background-clip:text; color:transparent; filter:drop-shadow(0 0 18px #f0f); }
+  #overlay p { margin:14px 0 26px; color:#9ff; font-size:clamp(14px,2.5vw,19px); line-height:1.8; }
+  #playBtn { padding:16px 52px; font-size:22px; font-weight:800; letter-spacing:3px;
+    color:#05010f; background:linear-gradient(90deg,#0ff,#f0f); border:none;
+    border-radius:50px; cursor:pointer; box-shadow:0 0 30px #0ff; transition:transform .15s; }
+  #playBtn:hover { transform:scale(1.08); }
+  #finalScore { font-size:26px; color:#ff0; text-shadow:0 0 12px #ff0; margin-bottom:18px; }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="hud">
+  <div class="box">SCORE <span id="score">0</span></div>
+  <div class="box">BEST <span id="best">0</span></div>
+</div>
+<div id="overlay">
+  <h1>NEON DASH</h1>
+  <p>บังคับจรวดหลบสิ่งกีดขวาง 🚀<br>
+     ⬅️ ➡️ หรือ A / D &nbsp;•&nbsp; บนมือถือ: ลากซ้าย-ขวา<br>
+     เก็บ ⬤ ออร์บสีเหลืองเพื่อรับคะแนน x2!</p>
+  <div id="finalScore"></div>
+  <button id="playBtn">▶ START</button>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ===== Renderer / Scene / Camera =====
+const canvas = document.getElementById('game');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x05010f, 20, 90);
+scene.background = new THREE.Color(0x05010f);
+
+const camera = new THREE.PerspectiveCamera(70, innerWidth/innerHeight, .1, 200);
+camera.position.set(0, 2.2, 8);
+
+// ===== Lights =====
+scene.add(new THREE.AmbientLight(0x334, 1.2));
+const shipLight = new THREE.PointLight(0x00ffff, 60, 40);
+scene.add(shipLight);
+const pinkLight = new THREE.PointLight(0xff00ff, 40, 60);
+pinkLight.position.set(0, 8, -20); scene.add(pinkLight);
+
+// ===== Grid floor & ceiling =====
+const grid = new THREE.GridHelper(400, 100, 0x00ffff, 0x220a44);
+grid.position.y = -2; scene.add(grid);
+const gridTop = new THREE.GridHelper(400, 100, 0xff00ff, 0x220a44);
+gridTop.position.y = 14; scene.add(gridTop);
+
+// ===== Starfield =====
+const starGeo = new THREE.BufferGeometry();
+const starPos = new Float32Array(1500);
+for (let i=0;i<1500;i++) starPos[i] = (Math.random()-.5)*160;
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPos,3));
+scene.add(new THREE.Points(starGeo,
+  new THREE.PointsMaterial({ color:0xffffff, size:.15 })));
+
+// ===== Ship (built from primitives — no assets needed) =====
+const ship = new THREE.Group();
+const body = new THREE.Mesh(
+  new THREE.ConeGeometry(.5, 1.8, 6),
+  new THREE.MeshStandardMaterial({ color:0x111133, emissive:0x00ffff,
+    emissiveIntensity:.7, metalness:.8, roughness:.2 }));
+body.rotation.x = -Math.PI/2; ship.add(body);
+const wingGeo = new THREE.BoxGeometry(1.6,.08,.5);
+const wingMat = new THREE.MeshStandardMaterial({ color:0xff00ff,
+  emissive:0xff00ff, emissiveIntensity:.9 });
+const wingL = new THREE.Mesh(wingGeo, wingMat); wingL.position.set(-.7,0,.5); ship.add(wingL);
+const wingR = wingL.clone(); wingR.position.x = .7; ship.add(wingR);
+const flame = new THREE.Mesh(new THREE.ConeGeometry(.25,.9,8),
+  new THREE.MeshBasicMaterial({ color:0xffaa00 }));
+flame.rotation.x = Math.PI/2; flame.position.z = 1.1; ship.add(flame);
+ship.position.set(0, 2.2, 0); scene.add(ship);
+
+// ===== Game objects =====
+const obstacles = [], orbs = [];
+const obsMatA = new THREE.MeshStandardMaterial({ color:0xff0055,
+  emissive:0xff0055, emissiveIntensity:.8, wireframe:true });
+const obsMatB = new THREE.MeshStandardMaterial({ color:0xff8800,
+  emissive:0xff8800, emissiveIntensity:.8 });
+const orbMat  = new THREE.MeshStandardMaterial({ color:0xffff00,
+  emissive:0xffff00, emissiveIntensity:1.2 });
+
+function spawnObstacle(z) {
+  const w = 1 + Math.random()*2.2, h = 1 + Math.random()*3;
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,w), Math.random()<.5?obsMatA:obsMatB);
+  // leave a gap: keep obstacle away from ship lane randomly
+  m.position.set((Math.random()-.5)*10, Math.random()*10 - 1, z);
+  m.userData.spin = (Math.random()-.5)*.03;
+  scene.add(m); obstacles.push(m);
+}
+function spawnOrb(z) {
+  const o = new THREE.Mesh(new THREE.IcosahedronGeometry(.35,0), orbMat);
+  o.position.set((Math.random()-.5)*9, Math.random()*9, z);
+  scene.add(o); orbs.push(o);
+}
+for (let i=0;i<14;i++) spawnObstacle(-15 - i*7 - Math.random()*4);
+for (let i=0;i<8;i++)  spawnOrb(-20 - i*13);
+
+// ===== Particles on death =====
+let burst = null;
+function explode() {
+  const g = new THREE.BufferGeometry();
+  const p = new Float32Array(200*3), v = [];
+  for (let i=0;i<200;i++){
+    p[i*3]=ship.position.x; p[i*3+1]=ship.position.y; p[i*3+2]=ship.position.z;
+    v.push(new THREE.Vector3((Math.random()-.5)*14,(Math.random()-.5)*14,(Math.random()-.5)*14));
+  }
+  g.setAttribute('position', new THREE.BufferAttribute(p,3));
+  burst = { pts:new THREE.Points(g, new THREE.PointsMaterial({
+    color:0x00ffff, size:.22 })), vel:v, life:1 };
+  scene.add(burst.pts);
+  ship.visible = false;
+}
+
+// ===== State & input =====
+let running=false, score=0, speed=14;
+let best = +(localStorage.getItem('neonBest')||0);
+document.getElementById('best').textContent = best;
+let tx=0; // target x
+addEventListener('keydown', e=>{
+  if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A') tx=Math.max(tx-1.4,-4.5);
+  if(e.key==='ArrowRight'||e.key==='d'||e.key==='D') tx=Math.min(tx+1.4,4.5);
+});
+let dragging=false;
+addEventListener('pointerdown', e=>{ if(running){dragging=true; tx=((e.clientX/innerWidth)*9-4.5);} });
+addEventListener('pointermove', e=>{ if(dragging) tx=((e.clientX/innerWidth)*9-4.5); });
+addEventListener('pointerup', ()=>dragging=false);
+
+const overlay=document.getElementById('overlay');
+const finalScore=document.getElementById('finalScore');
+document.getElementById('playBtn').onclick = ()=>{
+  // reset
+  obstacles.forEach(o=>scene.remove(o)); obstacles.length=0;
+  orbs.forEach(o=>scene.remove(o)); orbs.length=0;
+  for (let i=0;i<14;i++) spawnObstacle(-15-i*7-Math.random()*4);
+  for (let i=0;i<8;i++)  spawnOrb(-20-i*13);
+  if(burst){scene.remove(burst.pts);burst=null;}
+  ship.visible=true; score=0; speed=14; tx=0;
+  overlay.classList.add('hidden'); running=true;
+};
+
+// ===== Loop =====
+const clock = new THREE.Clock();
+const scoreEl=document.getElementById('score');
+
+function animate(){
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), .05);
+  const t = clock.elapsedTime;
+
+  // background scroll always
+  grid.position.z = (t*4)%4; gridTop.position.z=(t*4)%4;
+
+  flame.scale.set(1,1, 1+Math.sin(t*30)*.3);
+  pinkLight.position.x = Math.sin(t)*8;
+
+  if (running){
+    speed += dt*.55;                      // ยากขึ้นเรื่อยๆ
+    score += dt*speed;                    // คะแนนตามระยะทาง
+
+    // ship movement (lerp → ลื่น)
+    ship.position.x += (tx-ship.position.x)*Math.min(1,dt*10);
+    ship.position.y = 2.2 + Math.sin(t*3)*.25;
+    ship.rotation.z = (tx-ship.position.x)*-.35;
+    shipLight.position.copy(ship.position);
+
+    // move world
+    for (const o of obstacles){
+      o.position.z += speed*dt;
+      o.rotation.x += o.userData.spin; o.rotation.y += o.userData.spin;
+      if (o.position.z > 12){ o.position.z = -100-Math.random()*20;
+        o.position.x=(Math.random()-.5)*10; o.position.y=Math.random()*10-1; }
+      // collision (AABB)
+      if (Math.abs(o.position.z-ship.position.z)<1 &&
+          Math.abs(o.position.x-ship.position.x)<(o.geometry.parameters.width/2+.5) &&
+          Math.abs(o.position.y-ship.position.y)<(o.geometry.parameters.height/2+.5)){
+        running=false; explode();
+        best=Math.max(best,Math.floor(score));
+        localStorage.setItem('neonBest',best);
+        document.getElementById('best').textContent=best;
+        finalScore.textContent=`💥 GAME OVER — SCORE: ${Math.floor(score)}`;
+        setTimeout(()=>overlay.classList.remove('hidden'),900);
+      }
+    }
+    for (const o of orbs){
+      o.position.z += speed*dt; o.rotation.y+=dt*4; o.rotation.x+=dt*2;
+      if (o.position.z > 12){ o.position.z=-120-Math.random()*30;
+        o.position.x=(Math.random()-.5)*9; o.position.y=Math.random()*9; }
+      if (o.position.distanceTo(ship.position)<1.2){
+        score+=50; o.position.z=-120-Math.random()*30; // เก็บได้
+      }
+    }
+    scoreEl.textContent=Math.floor(score);
+  }
+
+  // particle burst
+  if (burst){
+    const p=burst.pts.geometry.attributes.position;
+    for(let i=0;i<200;i++){
+      p.array[i*3]+=burst.vel[i].x*dt; p.array[i*3+1]+=burst.vel[i].y*dt;
+      p.array[i*3+2]+=burst.vel[i].z*dt;
+    }
+    p.needsUpdate=true; burst.life-=dt;
+    if(burst.life<=0){scene.remove(burst.pts);burst=null;}
+  }
+
+  camera.position.x += (ship.position.x*.4-camera.position.x)*dt*5;
+  camera.lookAt(ship.position.x*.6, 2.2, -10);
+  renderer.render(scene,camera);
+}
+animate();
+
+addEventListener('resize', ()=>{
+  camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
+</script>
+</body>
+</html>
