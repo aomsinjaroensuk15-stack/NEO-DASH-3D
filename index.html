@@ -3,247 +3,456 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>NEON DASH 3D 🚀</title>
+<title>NEON DASH ULTRA 🚀</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  html,body { width:100%; height:100%; overflow:hidden; background:#05010f;
+  html,body { width:100%; height:100%; overflow:hidden; background:#020108;
     font-family:'Segoe UI',system-ui,sans-serif; touch-action:none; }
   #game { position:fixed; inset:0; display:block; }
-  #hud { position:fixed; top:14px; left:0; right:0; display:flex;
-    justify-content:space-between; padding:0 20px; pointer-events:none;
-    color:#0ff; text-shadow:0 0 10px #0ff; z-index:5; }
-  #hud .box { font-size:20px; font-weight:700; letter-spacing:2px; }
-  #hud .box span { color:#f0f; text-shadow:0 0 10px #f0f; }
+  #hud { position:fixed; top:12px; left:0; right:0; display:flex;
+    justify-content:space-between; padding:0 18px; pointer-events:none;
+    color:#0ff; text-shadow:0 0 12px #0ff; z-index:5; }
+  #hud .box { font-size:19px; font-weight:800; letter-spacing:2px; }
+  #hud .box span { color:#f0f; text-shadow:0 0 12px #f0f; }
+  #streak { position:fixed; top:44px; width:100%; text-align:center;
+    color:#ff0; text-shadow:0 0 14px #ff0; font-weight:800; font-size:20px;
+    opacity:0; transition:opacity .2s; z-index:5; pointer-events:none; }
   #overlay { position:fixed; inset:0; display:flex; flex-direction:column;
     align-items:center; justify-content:center; z-index:10; text-align:center;
-    background:radial-gradient(circle at 50% 40%, rgba(80,0,120,.35), rgba(5,1,15,.92));
-    color:#fff; transition:opacity .4s; }
+    background:radial-gradient(circle at 50% 40%, rgba(90,0,140,.4), rgba(2,1,8,.94));
+    color:#fff; transition:opacity .4s; padding:20px; }
   #overlay.hidden { opacity:0; pointer-events:none; }
-  #overlay h1 { font-size:clamp(40px,9vw,84px); letter-spacing:6px;
-    background:linear-gradient(90deg,#0ff,#f0f,#ff0); -webkit-background-clip:text;
-    background-clip:text; color:transparent; filter:drop-shadow(0 0 18px #f0f); }
-  #overlay p { margin:14px 0 26px; color:#9ff; font-size:clamp(14px,2.5vw,19px); line-height:1.8; }
-  #playBtn { padding:16px 52px; font-size:22px; font-weight:800; letter-spacing:3px;
-    color:#05010f; background:linear-gradient(90deg,#0ff,#f0f); border:none;
-    border-radius:50px; cursor:pointer; box-shadow:0 0 30px #0ff; transition:transform .15s; }
+  #overlay h1 { font-size:clamp(38px,9vw,80px); letter-spacing:6px;
+    background:linear-gradient(90deg,#0ff,#f0f,#ff0,#0ff); background-size:300% 100%;
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    filter:drop-shadow(0 0 22px #f0f); animation:hue 4s linear infinite; }
+  @keyframes hue { to { background-position:300% 0; } }
+  #overlay p { margin:14px 0 24px; color:#9ff; font-size:clamp(13px,2.4vw,18px); line-height:1.9; }
+  #playBtn { padding:16px 54px; font-size:22px; font-weight:800; letter-spacing:3px;
+    color:#020108; background:linear-gradient(90deg,#0ff,#f0f); border:none;
+    border-radius:50px; cursor:pointer; box-shadow:0 0 34px #0ff; transition:transform .15s; }
   #playBtn:hover { transform:scale(1.08); }
-  #finalScore { font-size:26px; color:#ff0; text-shadow:0 0 12px #ff0; margin-bottom:18px; }
+  #finalScore { font-size:26px; color:#ff0; text-shadow:0 0 14px #ff0; margin-bottom:18px; }
+  #credit { position:fixed; bottom:8px; width:100%; text-align:center;
+    color:#446; font-size:11px; z-index:5; pointer-events:none; }
 </style>
 </head>
 <body>
 <canvas id="game"></canvas>
 <div id="hud">
   <div class="box">SCORE <span id="score">0</span></div>
+  <div class="box"><span id="speedo">0</span> KM/H</div>
   <div class="box">BEST <span id="best">0</span></div>
 </div>
+<div id="streak"></div>
 <div id="overlay">
-  <h1>NEON DASH</h1>
-  <p>บังคับจรวดหลบสิ่งกีดขวาง 🚀<br>
-     ⬅️ ➡️ หรือ A / D &nbsp;•&nbsp; บนมือถือ: ลากซ้าย-ขวา<br>
-     เก็บ ⬤ ออร์บสีเหลืองเพื่อรับคะแนน x2!</p>
+  <h1>NEON DASH ULTRA</h1>
+  <p>บังคับขับไล่ทะลุกระจุยอุปสรรคเรืองแสงในอวกาศ 🚀<br>
+     ⬅️➡️⬆️⬇️ / WASD &nbsp;•&nbsp; มือถือ: ลากนิ้ว<br>
+     เก็บ ⬤ ออร์บให้ครบต่อเนื่องเพื่อคอมโบ x2 x3 x5!</p>
   <div id="finalScore"></div>
   <button id="playBtn">▶ START</button>
 </div>
+<div id="credit">Ship model: T-65 X-Wing by Ti Kawamoto (CC-BY) via poly.pizza</div>
 
 <script type="importmap">
-{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
 </script>
 <script type="module">
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
-// ===== Renderer / Scene / Camera =====
+// ================= Renderer / Scene =================
 const canvas = document.getElementById('game');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;   // ลดแสงโทนรวมลงเล็กน้อย
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0x05010f, 20, 90);
-scene.background = new THREE.Color(0x05010f);
+scene.background = new THREE.Color(0x020108);
+scene.fog = new THREE.FogExp2(0x020108, 0.0075);
 
-const camera = new THREE.PerspectiveCamera(70, innerWidth/innerHeight, .1, 200);
-camera.position.set(0, 2.2, 8);
+const camera = new THREE.PerspectiveCamera(72, innerWidth/innerHeight, .1, 600);
+camera.position.set(0, 3, 9);
 
-// ===== Lights =====
-scene.add(new THREE.AmbientLight(0x334, 1.2));
-const shipLight = new THREE.PointLight(0x00ffff, 60, 40);
-scene.add(shipLight);
-const pinkLight = new THREE.PointLight(0xff00ff, 40, 60);
-pinkLight.position.set(0, 8, -20); scene.add(pinkLight);
+// Bloom = แสงเรืองของทุกอย่าง (ปรับลด 30%: 1.15 -> 0.80)
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.80, .55, .12);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
 
-// ===== Grid floor & ceiling =====
-const grid = new THREE.GridHelper(400, 100, 0x00ffff, 0x220a44);
-grid.position.y = -2; scene.add(grid);
-const gridTop = new THREE.GridHelper(400, 100, 0xff00ff, 0x220a44);
-gridTop.position.y = 14; scene.add(gridTop);
+// ================= Lights =================
+scene.add(new THREE.AmbientLight(0x334, 1.4));
+const sun = new THREE.DirectionalLight(0x8899ff, 1.2); sun.position.set(5,10,5); scene.add(sun);
+const shipLight = new THREE.PointLight(0x00ffff, 80, 50); scene.add(shipLight);
 
-// ===== Starfield =====
-const starGeo = new THREE.BufferGeometry();
-const starPos = new Float32Array(1500);
-for (let i=0;i<1500;i++) starPos[i] = (Math.random()-.5)*160;
-starGeo.setAttribute('position', new THREE.BufferAttribute(starPos,3));
-scene.add(new THREE.Points(starGeo,
-  new THREE.PointsMaterial({ color:0xffffff, size:.15 })));
+// ================= Texture helpers =================
+function glowTexture(inner, outer){
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d');
+  const grad = g.createRadialGradient(64,64,0,64,64,64);
+  grad.addColorStop(0, inner); grad.addColorStop(.35, outer); grad.addColorStop(1,'rgba(0,0,0,0)');
+  g.fillStyle = grad; g.fillRect(0,0,128,128);
+  return new THREE.CanvasTexture(c);
+}
+const texGlow = glowTexture('rgba(255,255,255,1)','rgba(120,220,255,.45)');
 
-// ===== Ship (built from primitives — no assets needed) =====
-const ship = new THREE.Group();
-const body = new THREE.Mesh(
-  new THREE.ConeGeometry(.5, 1.8, 6),
-  new THREE.MeshStandardMaterial({ color:0x111133, emissive:0x00ffff,
-    emissiveIntensity:.7, metalness:.8, roughness:.2 }));
-body.rotation.x = -Math.PI/2; ship.add(body);
-const wingGeo = new THREE.BoxGeometry(1.6,.08,.5);
-const wingMat = new THREE.MeshStandardMaterial({ color:0xff00ff,
-  emissive:0xff00ff, emissiveIntensity:.9 });
-const wingL = new THREE.Mesh(wingGeo, wingMat); wingL.position.set(-.7,0,.5); ship.add(wingL);
-const wingR = wingL.clone(); wingR.position.x = .7; ship.add(wingR);
-const flame = new THREE.Mesh(new THREE.ConeGeometry(.25,.9,8),
-  new THREE.MeshBasicMaterial({ color:0xffaa00 }));
-flame.rotation.x = Math.PI/2; flame.position.z = 1.1; ship.add(flame);
-ship.position.set(0, 2.2, 0); scene.add(ship);
+// ================= Starfields (3 ชั้น parallax) =================
+const starLayers = [];
+[[2500,.45,.7,0xffffff],[2000,.3,.45,0x88bbff],[1500,.2,.3,0xffaaff]].forEach(([n,size,par,col])=>{
+  const geo = new THREE.BufferGeometry();
+  const pos = new Float32Array(n*3);
+  for(let i=0;i<n;i++){
+    pos[i*3]=(Math.random()-.5)*300; pos[i*3+1]=(Math.random()-.5)*160;
+    pos[i*3+2]=-Math.random()*400+100;
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  const pts = new THREE.Points(geo, new THREE.PointsMaterial({
+    color:col, size, map:texGlow, transparent:true, depthWrite:false,
+    blending:THREE.AdditiveBlending }));
+  scene.add(pts); starLayers.push({pts, par});
+});
 
-// ===== Game objects =====
-const obstacles = [], orbs = [];
-const obsMatA = new THREE.MeshStandardMaterial({ color:0xff0055,
-  emissive:0xff0055, emissiveIntensity:.8, wireframe:true });
-const obsMatB = new THREE.MeshStandardMaterial({ color:0xff8800,
-  emissive:0xff8800, emissiveIntensity:.8 });
-const orbMat  = new THREE.MeshStandardMaterial({ color:0xffff00,
-  emissive:0xffff00, emissiveIntensity:1.2 });
+// ================= Nebulae + Planets =================
+const nebulae = [];
+[0x6600ff,0x00ffcc,0xff00aa,0x2244ff,0xff4400,0x8800ff,0x00ccff,0xff0088].forEach(col=>{
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({
+    map:glowTexture('rgba(255,255,255,.9)','rgba(255,255,255,.15)'),
+    color:col, transparent:true, opacity:.10, depthWrite:false,   // ลดจาก .14
+    blending:THREE.AdditiveBlending }));
+  s.scale.setScalar(60+Math.random()*90);
+  s.position.set((Math.random()-.5)*260,(Math.random()-.5)*130,-80-Math.random()*280);
+  scene.add(s); nebulae.push(s);
+});
+function makePlanet(x,y,z,r,col,glowCol){
+  const p = new THREE.Mesh(new THREE.SphereGeometry(r,32,32),
+    new THREE.MeshStandardMaterial({ color:col, roughness:.9, emissive:col, emissiveIntensity:.12 }));
+  p.position.set(x,y,z); scene.add(p);
+  const a = new THREE.Sprite(new THREE.SpriteMaterial({ map:texGlow, color:glowCol,
+    transparent:true, opacity:.35, depthWrite:false, blending:THREE.AdditiveBlending })); // ลดจาก .5
+  a.scale.setScalar(r*3.2); a.position.copy(p.position); scene.add(a);
+}
+makePlanet(-70, 25, -230, 16, 0x3355aa, 0x4488ff);
+makePlanet( 85,-20, -300, 24, 0xaa4466, 0xff6688);
+makePlanet( 40, 40, -360, 10, 0x44aa88, 0x66ffcc);
 
-function spawnObstacle(z) {
-  const w = 1 + Math.random()*2.2, h = 1 + Math.random()*3;
-  const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,w), Math.random()<.5?obsMatA:obsMatB);
-  // leave a gap: keep obstacle away from ship lane randomly
-  m.position.set((Math.random()-.5)*10, Math.random()*10 - 1, z);
-  m.userData.spin = (Math.random()-.5)*.03;
+// ================= Asteroid belt (instanced) =================
+const AST = 70;
+const astMesh = new THREE.InstancedMesh(
+  new THREE.IcosahedronGeometry(1,0),
+  new THREE.MeshStandardMaterial({ color:0x778899, roughness:1, flatShading:true }), AST);
+const astData = [];
+const dummy = new THREE.Object3D();
+for(let i=0;i<AST;i++){
+  astData.push({ r:8+Math.random()*40, a:Math.random()*Math.PI*2,
+    s:.5+Math.random()*2.4, z:-Math.random()*320, spin:(Math.random()-.5)*.02 });
+}
+scene.add(astMesh);
+
+// ================= Ship =================
+const shipG = new THREE.Group();
+const modelHolder = new THREE.Group();
+shipG.add(modelHolder); scene.add(shipG);
+const MODEL_ROT = Math.PI; // ถ้าจรวดหันหลังให้ ให้เปลี่ยนเป็น 0
+let shipLoaded = false;
+
+function buildFallbackShip(){
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.ConeGeometry(.5,2,6),
+    new THREE.MeshStandardMaterial({ color:0x334, emissive:0x00ffff, emissiveIntensity:.8, metalness:.8, roughness:.3 }));
+  body.rotation.x = -Math.PI/2; g.add(body);
+  const wing = new THREE.Mesh(new THREE.BoxGeometry(1.7,.08,.5),
+    new THREE.MeshStandardMaterial({ color:0xff00ff, emissive:0xff00ff, emissiveIntensity:1 }));
+  wing.position.set(0,0,.5); g.add(wing);
+  g.rotation.y = MODEL_ROT; return g;
+}
+const loader = new GLTFLoader();
+loader.load('./ship.glb',
+  gltf => finishModel(gltf.scene),
+  undefined,
+  () => loader.load('https://static.poly.pizza/100p3RNw-5Q.glb',
+        gltf => finishModel(gltf.scene),
+        undefined,
+        () => { modelHolder.add(buildFallbackShip()); }));
+function finishModel(model){
+  const box = new THREE.Box3().setFromObject(model);
+  const size = box.getSize(new THREE.Vector3()), ctr = box.getCenter(new THREE.Vector3());
+  const scale = 2.4 / Math.max(size.x, size.y, size.z);
+  model.scale.setScalar(scale);
+  model.position.sub(ctr.multiplyScalar(scale));
+  model.rotation.y = MODEL_ROT;
+  model.traverse(o => { if(o.isMesh){ o.frustumCulled = false; } });
+  modelHolder.add(model); shipLoaded = true;
+}
+
+const engine = new THREE.Sprite(new THREE.SpriteMaterial({ map:texGlow,
+  color:0x66eeff, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false }));
+engine.scale.setScalar(1.3); engine.position.set(0,0,1.4); shipG.add(engine); // ลดจาก 1.6
+
+// Trail
+const TRAIL = 40;
+const trailPos = new Float32Array(TRAIL*3);
+const trailGeo = new THREE.BufferGeometry();
+trailGeo.setAttribute('position', new THREE.BufferAttribute(trailPos,3));
+const trail = new THREE.Line(trailGeo, new THREE.LineBasicMaterial({
+  color:0x00ffee, transparent:true, opacity:.7, blending:THREE.AdditiveBlending }));
+trail.frustumCulled = false; scene.add(trail);
+const trailHist = [];
+
+// ================= Obstacles =================
+const COLORS = [0x00ffff, 0xff00ff, 0xff6600, 0xff0044, 0x44ff88];
+const obstacles = [];
+function spawnBlock(z){
+  const w = .8+Math.random()*2.4, h = .8+Math.random()*3, d = .8+Math.random()*1.6;
+  const col = COLORS[Math.floor(Math.random()*COLORS.length)];
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d),
+    new THREE.MeshStandardMaterial({ color:0x111122, emissive:col, emissiveIntensity:1.0 })); // ลดจาก 1.4
+  const wire = new THREE.Mesh(new THREE.BoxGeometry(w*1.12,h*1.12,d*1.12),
+    new THREE.MeshBasicMaterial({ color:col, wireframe:true, transparent:true, opacity:.55 }));
+  m.add(wire);
+  m.position.set((Math.random()-.5)*14, Math.random()*8-.5, z);
+  m.userData = { spin:(Math.random()-.5)*.05, pulse:Math.random()*Math.PI*2, w,h,d };
   scene.add(m); obstacles.push(m);
 }
-function spawnOrb(z) {
-  const o = new THREE.Mesh(new THREE.IcosahedronGeometry(.35,0), orbMat);
-  o.position.set((Math.random()-.5)*9, Math.random()*9, z);
+const orbs = [];
+function resetWorld(){
+  obstacles.forEach(o=>scene.remove(o)); obstacles.length=0;
+  orbs.forEach(o=>scene.remove(o)); orbs.length=0;
+  for(let i=0;i<38;i++) spawnBlock(-18 - i*6 - Math.random()*4);
+  for(let i=0;i<14;i++) spawnOrb(-24 - i*11 - Math.random()*6);
+  if(burst){scene.remove(burst.pts); burst=null;}
+  trailHist.length = 0;
+}
+
+// ================= Orbs =================
+const orbMat = new THREE.MeshStandardMaterial({ color:0xffff00, emissive:0xffcc00, emissiveIntensity:2 });
+function spawnOrb(z){
+  const o = new THREE.Mesh(new THREE.IcosahedronGeometry(.38,1), orbMat);
+  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map:texGlow, color:0xffee66,
+    transparent:true, opacity:.55, depthWrite:false, blending:THREE.AdditiveBlending })); // ลดจาก .8
+  halo.scale.setScalar(2); o.add(halo);
+  o.position.set((Math.random()-.5)*12, Math.random()*8, z);
   scene.add(o); orbs.push(o);
 }
-for (let i=0;i<14;i++) spawnObstacle(-15 - i*7 - Math.random()*4);
-for (let i=0;i<8;i++)  spawnOrb(-20 - i*13);
 
-// ===== Particles on death =====
+// ================= Particles =================
 let burst = null;
-function explode() {
+function explode(pos, col=0x00ffff, n=350){
   const g = new THREE.BufferGeometry();
-  const p = new Float32Array(200*3), v = [];
-  for (let i=0;i<200;i++){
-    p[i*3]=ship.position.x; p[i*3+1]=ship.position.y; p[i*3+2]=ship.position.z;
-    v.push(new THREE.Vector3((Math.random()-.5)*14,(Math.random()-.5)*14,(Math.random()-.5)*14));
+  const p = new Float32Array(n*3), v = [];
+  for(let i=0;i<n;i++){
+    p[i*3]=pos.x; p[i*3+1]=pos.y; p[i*3+2]=pos.z;
+    v.push(new THREE.Vector3((Math.random()-.5)*20,(Math.random()-.5)*20,(Math.random()-.5)*20));
   }
   g.setAttribute('position', new THREE.BufferAttribute(p,3));
-  burst = { pts:new THREE.Points(g, new THREE.PointsMaterial({
-    color:0x00ffff, size:.22 })), vel:v, life:1 };
-  scene.add(burst.pts);
-  ship.visible = false;
+  burst = { pts:new THREE.Points(g, new THREE.PointsMaterial({ color:col, size:.3,
+    map:texGlow, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending })),
+    vel:v, life:1.2 };
+  burst.pts.frustumCulled = false; scene.add(burst.pts);
 }
 
-// ===== State & input =====
-let running=false, score=0, speed=14;
-let best = +(localStorage.getItem('neonBest')||0);
-document.getElementById('best').textContent = best;
-let tx=0; // target x
-addEventListener('keydown', e=>{
-  if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A') tx=Math.max(tx-1.4,-4.5);
-  if(e.key==='ArrowRight'||e.key==='d'||e.key==='D') tx=Math.min(tx+1.4,4.5);
-});
+// ================= Speed lines =================
+const SL = 90;
+const slGeo = new THREE.BufferGeometry();
+const slPos = new Float32Array(SL*6), slVel = new Float32Array(SL);
+for(let i=0;i<SL;i++){
+  const x=(Math.random()-.5)*24, y=Math.random()*12-1, z=-Math.random()*60;
+  slPos[i*6]=x; slPos[i*6+1]=y; slPos[i*6+2]=z;
+  slPos[i*6+3]=x; slPos[i*6+4]=y; slPos[i*6+5]=z+.8+Math.random()*1.6;
+  slVel[i]=.7+Math.random()*.6;
+}
+slGeo.setAttribute('position', new THREE.BufferAttribute(slPos,3));
+const speedLines = new THREE.LineSegments(slGeo, new THREE.LineBasicMaterial({
+  color:0x88eeff, transparent:true, opacity:.35, blending:THREE.AdditiveBlending }));
+speedLines.frustumCulled = false; scene.add(speedLines);
+
+// ================= Input =================
+const keys = {};
+addEventListener('keydown', e=>keys[e.key.toLowerCase()]=true);
+addEventListener('keyup',   e=>keys[e.key.toLowerCase()]=false);
 let dragging=false;
-addEventListener('pointerdown', e=>{ if(running){dragging=true; tx=((e.clientX/innerWidth)*9-4.5);} });
-addEventListener('pointermove', e=>{ if(dragging) tx=((e.clientX/innerWidth)*9-4.5); });
+addEventListener('pointerdown', e=>{ if(running){dragging=true; dragTo(e);} });
+addEventListener('pointermove', e=>{ if(dragging) dragTo(e); });
 addEventListener('pointerup', ()=>dragging=false);
+function dragTo(e){
+  tx = THREE.MathUtils.clamp((e.clientX/innerWidth)*13-6.5, -6, 6);
+  ty = THREE.MathUtils.clamp((1-e.clientY/innerHeight)*8, .4, 7);
+}
+
+// ================= Game state =================
+let running=false, score=0, speed=16, timeScale=1, shake=0;
+let streak=0, streakTimer=0, tx=0, ty=2.5;
+let best = +(localStorage.getItem('neonUltraBest')||0);
+document.getElementById('best').textContent = best;
 
 const overlay=document.getElementById('overlay');
 const finalScore=document.getElementById('finalScore');
+const streakEl=document.getElementById('streak');
+const scoreEl=document.getElementById('score');
+const speedoEl=document.getElementById('speedo');
+resetWorld();
+
 document.getElementById('playBtn').onclick = ()=>{
-  // reset
-  obstacles.forEach(o=>scene.remove(o)); obstacles.length=0;
-  orbs.forEach(o=>scene.remove(o)); orbs.length=0;
-  for (let i=0;i<14;i++) spawnObstacle(-15-i*7-Math.random()*4);
-  for (let i=0;i<8;i++)  spawnOrb(-20-i*13);
-  if(burst){scene.remove(burst.pts);burst=null;}
-  ship.visible=true; score=0; speed=14; tx=0;
+  resetWorld();
+  score=0; speed=16; timeScale=1; streak=0; shake=0; tx=0; ty=2.5;
+  shipG.visible = true;
   overlay.classList.add('hidden'); running=true;
 };
 
-// ===== Loop =====
+function gameOver(){
+  running=false; explode(shipG.position.clone(), 0x00ffff);
+  shipG.visible=false; shake=1; timeScale=.22;
+  best=Math.max(best,Math.floor(score));
+  localStorage.setItem('neonUltraBest',best);
+  document.getElementById('best').textContent=best;
+  finalScore.textContent=`💥 GAME OVER — SCORE: ${Math.floor(score)}`;
+  setTimeout(()=>{ overlay.classList.remove('hidden'); timeScale=1; },1300);
+}
+
+// ================= Main loop =================
 const clock = new THREE.Clock();
-const scoreEl=document.getElementById('score');
+let travel = 0;
 
 function animate(){
   requestAnimationFrame(animate);
-  const dt = Math.min(clock.getDelta(), .05);
+  const rawDt = Math.min(clock.getDelta(), .05);
+  const dt = rawDt * timeScale;
   const t = clock.elapsedTime;
+  travel += speed*dt;
 
-  // background scroll always
-  grid.position.z = (t*4)%4; gridTop.position.z=(t*4)%4;
+  starLayers.forEach(l=>{ l.pts.position.z = (travel*l.par)%400; });
+  nebulae.forEach((n,i)=>{ n.material.rotation += dt*.02*(i%2?1:-1); });
 
-  flame.scale.set(1,1, 1+Math.sin(t*30)*.3);
-  pinkLight.position.x = Math.sin(t)*8;
+  for(let i=0;i<AST;i++){
+    const a = astData[i];
+    a.z += speed*dt*.85;
+    if(a.z>20){ a.z-=340; a.a=Math.random()*Math.PI*2; a.r=8+Math.random()*40; }
+    dummy.position.set(Math.cos(a.a)*a.r, Math.sin(a.a)*a.r*.6+3, a.z);
+    dummy.rotation.set(t*a.spin*4, t*a.spin*6, 0);
+    dummy.scale.setScalar(a.s);
+    dummy.updateMatrix();
+    astMesh.setMatrixAt(i, dummy.matrix);
+  }
+  astMesh.instanceMatrix.needsUpdate = true;
 
   if (running){
-    speed += dt*.55;                      // ยากขึ้นเรื่อยๆ
-    score += dt*speed;                    // คะแนนตามระยะทาง
+    speed += dt*.6;
+    score += dt*speed;
 
-    // ship movement (lerp → ลื่น)
-    ship.position.x += (tx-ship.position.x)*Math.min(1,dt*10);
-    ship.position.y = 2.2 + Math.sin(t*3)*.25;
-    ship.rotation.z = (tx-ship.position.x)*-.35;
-    shipLight.position.copy(ship.position);
+    const mv = 11*dt;
+    if(keys['arrowleft']||keys['a']) tx=Math.max(tx-mv,-6);
+    if(keys['arrowright']||keys['d']) tx=Math.min(tx+mv,6);
+    if(keys['arrowup']||keys['w']) ty=Math.min(ty+mv*.7,7);
+    if(keys['arrowdown']||keys['s']) ty=Math.max(ty-mv*.7,.4);
 
-    // move world
+    const px = shipG.position.x, py = shipG.position.y;
+    shipG.position.x += (tx-px)*Math.min(1,dt*8);
+    shipG.position.y += (ty-py)*Math.min(1,dt*8);
+    const vx = (shipG.position.x-px)/Math.max(dt,.001);
+
+    shipG.rotation.z = THREE.MathUtils.lerp(shipG.rotation.z, -vx*.045, .15);
+    shipG.rotation.x = THREE.MathUtils.lerp(shipG.rotation.x,
+      -(ty-shipG.position.y)*.06, .12);
+    shipG.rotation.y = -vx*.02;
+
+    engine.scale.setScalar(1.1 + Math.sin(t*28)*.22 + speed*.015); // ลดจาก 1.3 ฐาน
+    camera.fov = 72 + speed*.28; camera.updateProjectionMatrix();
+    shipLight.position.copy(shipG.position);
+    shipLight.position.z += 1;
+
+    trailHist.unshift(shipG.position.clone());
+    if(trailHist.length>TRAIL) trailHist.pop();
+    for(let i=0;i<TRAIL;i++){
+      const p = trailHist[Math.min(i,trailHist.length-1)] || shipG.position;
+      trailPos[i*3]=p.x; trailPos[i*3+1]=p.y; trailPos[i*3+2]=p.z+.9;
+    }
+    trailGeo.attributes.position.needsUpdate = true;
+    trail.material.opacity = Math.min(.55, speed/40); // ลดเพดานจาก .75
+
+    for(let i=0;i<SL;i++){
+      slPos[i*6+2]+=speed*dt*1.6*slVel[i]; slPos[i*6+5]+=speed*dt*1.6*slVel[i];
+      if(slPos[i*6+2]>10){
+        const x=(Math.random()-.5)*24, y=Math.random()*12-1, z=-60-Math.random()*20;
+        slPos[i*6]=x; slPos[i*6+1]=y; slPos[i*6+2]=z;
+        slPos[i*6+3]=x; slPos[i*6+4]=y; slPos[i*6+5]=z+.8+Math.random()*1.6;
+      }
+    }
+    slGeo.attributes.position.needsUpdate = true;
+    speedLines.material.opacity = Math.min(.4, speed/70); // ลดจาก .5
+
     for (const o of obstacles){
       o.position.z += speed*dt;
-      o.rotation.x += o.userData.spin; o.rotation.y += o.userData.spin;
-      if (o.position.z > 12){ o.position.z = -100-Math.random()*20;
-        o.position.x=(Math.random()-.5)*10; o.position.y=Math.random()*10-1; }
-      // collision (AABB)
-      if (Math.abs(o.position.z-ship.position.z)<1 &&
-          Math.abs(o.position.x-ship.position.x)<(o.geometry.parameters.width/2+.5) &&
-          Math.abs(o.position.y-ship.position.y)<(o.geometry.parameters.height/2+.5)){
-        running=false; explode();
-        best=Math.max(best,Math.floor(score));
-        localStorage.setItem('neonBest',best);
-        document.getElementById('best').textContent=best;
-        finalScore.textContent=`💥 GAME OVER — SCORE: ${Math.floor(score)}`;
-        setTimeout(()=>overlay.classList.remove('hidden'),900);
+      o.rotation.x += o.userData.spin; o.rotation.y += o.userData.spin*1.3;
+      o.userData.pulse += dt*3;
+      const s = 1 + Math.sin(o.userData.pulse)*.07;
+      o.scale.setScalar(s);
+      if (o.position.z > 14){ o.position.z = -160-Math.random()*60;
+        o.position.x=(Math.random()-.5)*14; o.position.y=Math.random()*8-.5; }
+      if (Math.abs(o.position.z-shipG.position.z)<1.1 &&
+          Math.abs(o.position.x-shipG.position.x)<(o.userData.w/2+.55) &&
+          Math.abs(o.position.y-shipG.position.y)<(o.userData.h/2+.55)){
+        gameOver(); break;
       }
     }
+
+    streakTimer -= dt;
+    if(streakTimer<=0 && streak>0){ streak=0; streakEl.style.opacity=0; }
     for (const o of orbs){
-      o.position.z += speed*dt; o.rotation.y+=dt*4; o.rotation.x+=dt*2;
-      if (o.position.z > 12){ o.position.z=-120-Math.random()*30;
-        o.position.x=(Math.random()-.5)*9; o.position.y=Math.random()*9; }
-      if (o.position.distanceTo(ship.position)<1.2){
-        score+=50; o.position.z=-120-Math.random()*30; // เก็บได้
+      o.position.z += speed*dt;
+      o.rotation.y += dt*5; o.rotation.x += dt*3;
+      o.scale.setScalar(1+Math.sin(t*6)*.15);
+      if (o.position.z > 14){ o.position.z = -170-Math.random()*40;
+        o.position.x=(Math.random()-.5)*12; o.position.y=Math.random()*8; }
+      if (o.position.distanceTo(shipG.position)<1.3){
+        streak++; streakTimer=3;
+        const mult = streak>=8?5:streak>=4?3:streak>=2?2:1;
+        score += 50*mult;
+        streakEl.textContent = streak>1 ? `🔥 COMBO x${mult} (streak ${streak})` : '';
+        streakEl.style.opacity = streak>1?1:0;
+        explode(o.position.clone(), 0xffcc00, 60);
+        o.position.z = -170-Math.random()*40; o.position.x=(Math.random()-.5)*12;
       }
     }
-    scoreEl.textContent=Math.floor(score);
+    scoreEl.textContent = Math.floor(score);
+    speedoEl.textContent = Math.floor(speed*12);
   }
 
-  // particle burst
   if (burst){
     const p=burst.pts.geometry.attributes.position;
-    for(let i=0;i<200;i++){
+    for(let i=0;i<p.count;i++){
       p.array[i*3]+=burst.vel[i].x*dt; p.array[i*3+1]+=burst.vel[i].y*dt;
       p.array[i*3+2]+=burst.vel[i].z*dt;
+      burst.vel[i].multiplyScalar(.97);
     }
     p.needsUpdate=true; burst.life-=dt;
+    burst.pts.material.opacity = Math.max(burst.life,0);
     if(burst.life<=0){scene.remove(burst.pts);burst=null;}
   }
 
-  camera.position.x += (ship.position.x*.4-camera.position.x)*dt*5;
-  camera.lookAt(ship.position.x*.6, 2.2, -10);
-  renderer.render(scene,camera);
+  shake = Math.max(0, shake - rawDt*1.4);
+  const shx=(Math.random()-.5)*shake*.6, shy=(Math.random()-.5)*shake*.6;
+  camera.position.x += ((shipG.position.x*.45)+shx - camera.position.x)*Math.min(1,rawDt*5);
+  camera.position.y += ((shipG.position.y+1.2)+shy - camera.position.y)*Math.min(1,rawDt*5);
+  camera.lookAt(shipG.position.x*.5, shipG.position.y*.7, -12);
+
+  composer.render();
 }
 animate();
 
 addEventListener('resize', ()=>{
   camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
   renderer.setSize(innerWidth,innerHeight);
+  composer.setSize(innerWidth,innerHeight);
 });
 </script>
 </body>
