@@ -18,3 +18,6 @@
 - `speed += dt*.55` — อัตราเร่งความยาก
 - ตัวแปร `spawnObstacle` — ปรับความถี่/ขนาดอุปสรรค
 - เปลี่ยนสี neon ได้ที่ `emissive` ของวัสดุแต่ละชิ้น
+
+เปิดที่นี่
+[กดที่นี่เพื่อเปิด](https://aomsinjaroensuk15-stack.github.io/NEO-DASH-3D/)
