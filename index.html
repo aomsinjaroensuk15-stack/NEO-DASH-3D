@@ -1,459 +1,196 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>NEON DASH ULTRA 🚀</title>
-<style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  html,body { width:100%; height:100%; overflow:hidden; background:#020108;
-    font-family:'Segoe UI',system-ui,sans-serif; touch-action:none; }
-  #game { position:fixed; inset:0; display:block; }
-  #hud { position:fixed; top:12px; left:0; right:0; display:flex;
-    justify-content:space-between; padding:0 18px; pointer-events:none;
-    color:#0ff; text-shadow:0 0 12px #0ff; z-index:5; }
-  #hud .box { font-size:19px; font-weight:800; letter-spacing:2px; }
-  #hud .box span { color:#f0f; text-shadow:0 0 12px #f0f; }
-  #streak { position:fixed; top:44px; width:100%; text-align:center;
-    color:#ff0; text-shadow:0 0 14px #ff0; font-weight:800; font-size:20px;
-    opacity:0; transition:opacity .2s; z-index:5; pointer-events:none; }
-  #overlay { position:fixed; inset:0; display:flex; flex-direction:column;
-    align-items:center; justify-content:center; z-index:10; text-align:center;
-    background:radial-gradient(circle at 50% 40%, rgba(90,0,140,.4), rgba(2,1,8,.94));
-    color:#fff; transition:opacity .4s; padding:20px; }
-  #overlay.hidden { opacity:0; pointer-events:none; }
-  #overlay h1 { font-size:clamp(38px,9vw,80px); letter-spacing:6px;
-    background:linear-gradient(90deg,#0ff,#f0f,#ff0,#0ff); background-size:300% 100%;
-    -webkit-background-clip:text; background-clip:text; color:transparent;
-    filter:drop-shadow(0 0 22px #f0f); animation:hue 4s linear infinite; }
-  @keyframes hue { to { background-position:300% 0; } }
-  #overlay p { margin:14px 0 24px; color:#9ff; font-size:clamp(13px,2.4vw,18px); line-height:1.9; }
-  #playBtn { padding:16px 54px; font-size:22px; font-weight:800; letter-spacing:3px;
-    color:#020108; background:linear-gradient(90deg,#0ff,#f0f); border:none;
-    border-radius:50px; cursor:pointer; box-shadow:0 0 34px #0ff; transition:transform .15s; }
-  #playBtn:hover { transform:scale(1.08); }
-  #finalScore { font-size:26px; color:#ff0; text-shadow:0 0 14px #ff0; margin-bottom:18px; }
-  #credit { position:fixed; bottom:8px; width:100%; text-align:center;
-    color:#446; font-size:11px; z-index:5; pointer-events:none; }
-</style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ทำนายฝน</title>
+<meta name="theme-color" content="#5AA7E8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
 </head>
-<body>
-<canvas id="game"></canvas>
-<div id="hud">
-  <div class="box">SCORE <span id="score">0</span></div>
-  <div class="box"><span id="speedo">0</span> KM/H</div>
-  <div class="box">BEST <span id="best">0</span></div>
-</div>
-<div id="streak"></div>
-<div id="overlay">
-  <h1>NEON DASH ULTRA</h1>
-  <p>บังคับขับไล่ทะลุกระจุยอุปสรรคเรืองแสงในอวกาศ 🚀<br>
-     ⬅️➡️⬆️⬇️ / WASD &nbsp;•&nbsp; มือถือ: ลากนิ้ว<br>
-     เก็บ ⬤ ออร์บให้ครบต่อเนื่องเพื่อคอมโบ x2 x3 x5!</p>
-  <div id="finalScore"></div>
-  <button id="playBtn">▶ START</button>
-</div>
-<div id="credit">Ship model: T-65 X-Wing by Ti Kawamoto (CC-BY) via poly.pizza</div>
+<body class="t-day-dry">
+<div id="skyA" class="on"></div><div id="skyB"></div>
+<div id="orb">☀️</div>
+<main>
+<h1>🌦️ ทำนายฝน</h1>
+<p id="upd">กำลังโหลด…</p>
+<div id="note" class="note" hidden></div>
+<button id="gps" type="button">📍 ใช้ตำแหน่งของฉัน</button>
+<div class="srow"><input id="q" placeholder="หรือพิมพ์ชื่อที่ เช่น เชียงใหม่" aria-label="ค้นหาสถานที่"><button id="find">ค้นหา</button></div>
+<div id="chips"></div>
 
-<script type="importmap">
-{ "imports": {
-  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-} }
-</script>
-<script type="module">
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
-import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+<section id="now" hidden>
+  <div class="row1">
+    <div id="nw-icon">⛅</div>
+    <div id="nw-main">
+      <p id="nw-temp">—</p>
+      <p id="nw-label">—</p>
+      <div id="nw-meta">
+        <span>💧 โอกาสตก <b id="nw-pp">—</b></span>
+        <span>🌧 ปริมาณ <b id="nw-mm">—</b></span>
+      </div>
+    </div>
+  </div>
+  <p id="nw-sum"></p>
+</section>
 
-// ================= Renderer / Scene =================
-const canvas = document.getElementById('game');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.setSize(innerWidth, innerHeight);
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.05;   // ลดแสงโทนรวมลงเล็กน้อย
+<h2 id="dh" hidden>⏱️ 24 ชั่วโมงข้างหน้า <span id="tot"></span></h2>
+<div id="tl"></div>
 
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x020108);
-scene.fog = new THREE.FogExp2(0x020108, 0.0075);
+<p class="fine">พยากรณ์จากโมเดลสภาพอากาศ (Open-Meteo, CC BY 4.0) ความละเอียดหลายกิโลเมตร ไม่ใช่เรดาร์ตรวจจับจริง — ฝนเม็ดเดียวในซอยข้าง ๆ อาจไม่ตรงกับที่แอปบอกเสมอ แต่ใช้วางแผน "พกร่มไหม / ควรออกไปตอนไหน" ได้ดี</p>
+</main>
+<script>
+const $=i=>document.getElementById(i);
+const API='https://api.open-meteo.com/v1/forecast';
+let cur=null; // {lat,lon,name,ts,h:{time,pp,pc,code,temp,cloud,isday}}
 
-const camera = new THREE.PerspectiveCamera(72, innerWidth/innerHeight, .1, 600);
-camera.position.set(0, 3, 9);
+/* ---- WMO weathercode → กลุ่ม/ไอคอน/คำบรรยาย ---- */
+const G={clear:[0],partly:[1,2],cloudy:[3],fog:[45,48],drizzle:[51,53,55,56,57],rain:[61,63,65,66,67,80,81,82],snow:[71,73,75,77,85,86],thunder:[95,96,99]};
+const grp=c=>{for(const k in G)if(G[k].includes(c))return k;return 'cloudy'};
+const ICON={clear:['☀️','🌙'],partly:['🌤️','☁️'],cloudy:['☁️','☁️'],fog:['🌫️','🌫️'],drizzle:['🌦️','🌦️'],rain:['🌧️','🌧️'],snow:['🌨️','🌨️'],thunder:['⛈️','⛈️']};
+const LABEL={clear:'ฟ้าโล่ง ไม่มีฝน',partly:'มีเมฆบาง ไม่มีฝน',cloudy:'ฟ้าครึ้ม แต่ยังไม่มีฝน',fog:'มีหมอก',drizzle:'มีฝนปรอย ๆ',rain:'ฝนกำลังตก',snow:'หิมะตก',thunder:'พายุฝนฟ้าคะนอง'};
 
-// Bloom = แสงเรืองของทุกอย่าง (ปรับลด 30%: 1.15 -> 0.80)
-const composer = new EffectComposer(renderer);
-composer.addPass(new RenderPass(scene, camera));
-const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.80, .35, .12);
-composer.addPass(bloom);
-composer.addPass(new OutputPass());
-
-// ================= Lights =================
-scene.add(new THREE.AmbientLight(0x334, 1.4));
-const sun = new THREE.DirectionalLight(0x8899ff, 1.2); sun.position.set(5,10,5); scene.add(sun);
-const shipLight = new THREE.PointLight(0x00ffff, 80, 50); scene.add(shipLight);
-
-// ================= Texture helpers =================
-function glowTexture(inner, outer){
-  const c = document.createElement('canvas'); c.width = c.height = 128;
-  const g = c.getContext('2d');
-  const grad = g.createRadialGradient(64,64,0,64,64,64);
-  grad.addColorStop(0, inner); grad.addColorStop(.35, outer); grad.addColorStop(1,'rgba(0,0,0,0)');
-  g.fillStyle = grad; g.fillRect(0,0,128,128);
-  return new THREE.CanvasTexture(c);
-}
-const texGlow = glowTexture('rgba(255,255,255,1)','rgba(120,220,255,.45)');
-
-// ================= Starfields (3 ชั้น parallax) =================
-const starLayers = [];
-[[2500,.45,.7,0xffffff],[2000,.3,.45,0x88bbff],[1500,.2,.3,0xffaaff]].forEach(([n,size,par,col])=>{
-  const geo = new THREE.BufferGeometry();
-  const pos = new Float32Array(n*3);
-  for(let i=0;i<n;i++){
-    pos[i*3]=(Math.random()-.5)*300; pos[i*3+1]=(Math.random()-.5)*160;
-    pos[i*3+2]=-Math.random()*400+100;
-  }
-  geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
-  const pts = new THREE.Points(geo, new THREE.PointsMaterial({
-    color:col, size, map:texGlow, transparent:true, depthWrite:false,
-    blending:THREE.AdditiveBlending }));
-  scene.add(pts); starLayers.push({pts, par});
-});
-
-// ================= Nebulae + Planets =================
-const nebulae = [];
-[0x6600ff,0x00ffcc,0xff00aa,0x2244ff,0xff4400,0x8800ff,0x00ccff,0xff0088].forEach(col=>{
-  const s = new THREE.Sprite(new THREE.SpriteMaterial({
-    map:glowTexture('rgba(255,255,255,.9)','rgba(255,255,255,.15)'),
-    color:col, transparent:true, opacity:.10, depthWrite:false,   // ลดจาก .14
-    blending:THREE.AdditiveBlending }));
-  s.scale.setScalar(60+Math.random()*90);
-  s.position.set((Math.random()-.5)*260,(Math.random()-.5)*130,-80-Math.random()*280);
-  scene.add(s); nebulae.push(s);
-});
-function makePlanet(x,y,z,r,col,glowCol){
-  const p = new THREE.Mesh(new THREE.SphereGeometry(r,32,32),
-    new THREE.MeshStandardMaterial({ color:col, roughness:.9, emissive:col, emissiveIntensity:.12 }));
-  p.position.set(x,y,z); scene.add(p);
-  const a = new THREE.Sprite(new THREE.SpriteMaterial({ map:texGlow, color:glowCol,
-    transparent:true, opacity:.35, depthWrite:false, blending:THREE.AdditiveBlending })); // ลดจาก .5
-  a.scale.setScalar(r*3.2); a.position.copy(p.position); scene.add(a);
-}
-makePlanet(-70, 25, -230, 16, 0x3355aa, 0x4488ff);
-makePlanet( 85,-20, -300, 24, 0xaa4466, 0xff6688);
-makePlanet( 40, 40, -360, 10, 0x44aa88, 0x66ffcc);
-
-// ================= Asteroid belt (instanced) =================
-const AST = 70;
-const astMesh = new THREE.InstancedMesh(
-  new THREE.IcosahedronGeometry(1,0),
-  new THREE.MeshStandardMaterial({ color:0x778899, roughness:1, flatShading:true }), AST);
-const astData = [];
-const dummy = new THREE.Object3D();
-for(let i=0;i<AST;i++){
-  astData.push({ r:8+Math.random()*40, a:Math.random()*Math.PI*2,
-    s:.5+Math.random()*2.4, z:-Math.random()*320, spin:(Math.random()-.5)*.02 });
-}
-scene.add(astMesh);
-
-// ================= Ship =================
-const shipG = new THREE.Group();
-const modelHolder = new THREE.Group();
-shipG.add(modelHolder); scene.add(shipG);
-const MODEL_ROT = Math.PI; // ถ้าจรวดหันหลังให้ ให้เปลี่ยนเป็น 0
-let shipLoaded = false;
-
-function buildFallbackShip(){
-  const g = new THREE.Group();
-  const body = new THREE.Mesh(new THREE.ConeGeometry(.5,2,6),
-    new THREE.MeshStandardMaterial({ color:0x334, emissive:0x00ffff, emissiveIntensity:.8, metalness:.8, roughness:.3 }));
-  body.rotation.x = -Math.PI/2; g.add(body);
-  const wing = new THREE.Mesh(new THREE.BoxGeometry(1.7,.08,.5),
-    new THREE.MeshStandardMaterial({ color:0xff00ff, emissive:0xff00ff, emissiveIntensity:1 }));
-  wing.position.set(0,0,.5); g.add(wing);
-  g.rotation.y = MODEL_ROT; return g;
-}
-const loader = new GLTFLoader();
-loader.load('./ship.glb',
-  gltf => finishModel(gltf.scene),
-  undefined,
-  () => loader.load('https://static.poly.pizza/100p3RNw-5Q.glb',
-        gltf => finishModel(gltf.scene),
-        undefined,
-        () => { modelHolder.add(buildFallbackShip()); }));
-function finishModel(model){
-  const box = new THREE.Box3().setFromObject(model);
-  const size = box.getSize(new THREE.Vector3()), ctr = box.getCenter(new THREE.Vector3());
-  const scale = 2.4 / Math.max(size.x, size.y, size.z);
-  model.scale.setScalar(scale);
-  model.position.sub(ctr.multiplyScalar(scale));
-  model.rotation.y = MODEL_ROT;
-  model.traverse(o => { if(o.isMesh){ o.frustumCulled = false; } });
-  modelHolder.add(model); shipLoaded = true;
-}
-
-const engine = new THREE.Sprite(new THREE.SpriteMaterial({ map:texGlow,
-  color:0x66eeff, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false }));
-engine.scale.setScalar(1.3); engine.position.set(0,0,1.4); shipG.add(engine); // ลดจาก 1.6
-
-// Trail
-const TRAIL = 40;
-const trailPos = new Float32Array(TRAIL*3);
-const trailGeo = new THREE.BufferGeometry();
-trailGeo.setAttribute('position', new THREE.BufferAttribute(trailPos,3));
-const trail = new THREE.Line(trailGeo, new THREE.LineBasicMaterial({
-  color:0x00ffee, transparent:true, opacity:.7, blending:THREE.AdditiveBlending }));
-trail.frustumCulled = false; scene.add(trail);
-const trailHist = [];
-
-// ================= Obstacles =================
-const COLORS = [0x00ffff, 0xff00ff, 0xff6600, 0xff0044, 0x44ff88];
-const obstacles = [];
-function spawnBlock(z){
-  const w = .8+Math.random()*2.4, h = .8+Math.random()*3, d = .8+Math.random()*1.6;
-  const col = COLORS[Math.floor(Math.random()*COLORS.length)];
-  const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d),
-    new THREE.MeshStandardMaterial({ color:0x111122, emissive:col, emissiveIntensity:1.0 })); // ลดจาก 1.4
-  const wire = new THREE.Mesh(new THREE.BoxGeometry(w*1.12,h*1.12,d*1.12),
-    new THREE.MeshBasicMaterial({ color:col, wireframe:true, transparent:true, opacity:.55 }));
-  m.add(wire);
-  m.position.set((Math.random()-.5)*14, Math.random()*8-.5, z);
-  m.userData = { spin:(Math.random()-.5)*.05, pulse:Math.random()*Math.PI*2, w,h,d };
-  scene.add(m); obstacles.push(m);
-}
-const orbs = [];
-function resetWorld(){
-  obstacles.forEach(o=>scene.remove(o)); obstacles.length=0;
-  orbs.forEach(o=>scene.remove(o)); orbs.length=0;
-  for(let i=0;i<38;i++) spawnBlock(-18 - i*6 - Math.random()*4);
-  for(let i=0;i<14;i++) spawnOrb(-24 - i*11 - Math.random()*6);
-  if(burst){scene.remove(burst.pts); burst=null;}
-  trailHist.length = 0;
-}
-
-// ================= Orbs =================
-const orbMat = new THREE.MeshStandardMaterial({ color:0xffff00, emissive:0xffcc00, emissiveIntensity:2 });
-function spawnOrb(z){
-  const o = new THREE.Mesh(new THREE.IcosahedronGeometry(.38,1), orbMat);
-  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map:texGlow, color:0xffee66,
-    transparent:true, opacity:.55, depthWrite:false, blending:THREE.AdditiveBlending })); // ลดจาก .8
-  halo.scale.setScalar(2); o.add(halo);
-  o.position.set((Math.random()-.5)*12, Math.random()*8, z);
-  scene.add(o); orbs.push(o);
-}
-
-// ================= Particles =================
-let burst = null;
-function explode(pos, col=0x00ffff, n=350){
-  const g = new THREE.BufferGeometry();
-  const p = new Float32Array(n*3), v = [];
-  for(let i=0;i<n;i++){
-    p[i*3]=pos.x; p[i*3+1]=pos.y; p[i*3+2]=pos.z;
-    v.push(new THREE.Vector3((Math.random()-.5)*20,(Math.random()-.5)*20,(Math.random()-.5)*20));
-  }
-  g.setAttribute('position', new THREE.BufferAttribute(p,3));
-  burst = { pts:new THREE.Points(g, new THREE.PointsMaterial({ color:col, size:.3,
-    map:texGlow, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending })),
-    vel:v, life:1.2 };
-  burst.pts.frustumCulled = false; scene.add(burst.pts);
-}
-
-// ================= Speed lines =================
-const SL = 90;
-const slGeo = new THREE.BufferGeometry();
-const slPos = new Float32Array(SL*6), slVel = new Float32Array(SL);
-for(let i=0;i<SL;i++){
-  const x=(Math.random()-.5)*24, y=Math.random()*12-1, z=-Math.random()*60;
-  slPos[i*6]=x; slPos[i*6+1]=y; slPos[i*6+2]=z;
-  slPos[i*6+3]=x; slPos[i*6+4]=y; slPos[i*6+5]=z+.8+Math.random()*1.6;
-  slVel[i]=.7+Math.random()*.6;
-}
-slGeo.setAttribute('position', new THREE.BufferAttribute(slPos,3));
-const speedLines = new THREE.LineSegments(slGeo, new THREE.LineBasicMaterial({
-  color:0x88eeff, transparent:true, opacity:.35, blending:THREE.AdditiveBlending }));
-speedLines.frustumCulled = false; scene.add(speedLines);
-
-// ================= Input =================
-const keys = {};
-addEventListener('keydown', e=>keys[e.key.toLowerCase()]=true);
-addEventListener('keyup',   e=>keys[e.key.toLowerCase()]=false);
-let dragging=false;
-addEventListener('pointerdown', e=>{ if(running){dragging=true; dragTo(e);} });
-addEventListener('pointermove', e=>{ if(dragging) dragTo(e); });
-addEventListener('pointerup', ()=>dragging=false);
-function dragTo(e){
-  tx = THREE.MathUtils.clamp((e.clientX/innerWidth)*13-6.5, -6, 6);
-  ty = THREE.MathUtils.clamp((1-e.clientY/innerHeight)*8, .4, 7);
-}
-
-// ================= Game state =================
-let running=false, score=0, speed=16, timeScale=1, shake=0;
-let streak=0, streakTimer=0, tx=0, ty=2.5;
-let best = +(localStorage.getItem('neonUltraBest')||0);
-document.getElementById('best').textContent = best;
-
-const overlay=document.getElementById('overlay');
-const finalScore=document.getElementById('finalScore');
-const streakEl=document.getElementById('streak');
-const scoreEl=document.getElementById('score');
-const speedoEl=document.getElementById('speedo');
-resetWorld();
-
-document.getElementById('playBtn').onclick = ()=>{
-  resetWorld();
-  score=0; speed=16; timeScale=1; streak=0; shake=0; tx=0; ty=2.5;
-  shipG.visible = true;
-  overlay.classList.add('hidden'); running=true;
+/* ---- หมวดของแต่ละชั่วโมง (สำหรับสรุป/ธีม) ---- */
+const catOf=h=>{
+ const g=grp(h.code);
+ if(g==='thunder'||g==='snow')return g;
+ if(g==='rain'||g==='drizzle')return(h.pc>=0.5||h.pp>=50)?'wet':'drizzle';
+ return g;
 };
+const isWet=c=>c==='wet'||c==='drizzle'||c==='thunder';
 
-function gameOver(){
-  running=false; explode(shipG.position.clone(), 0x00ffff);
-  shipG.visible=false; shake=1; timeScale=.22;
-  best=Math.max(best,Math.floor(score));
-  localStorage.setItem('neonUltraBest',best);
-  document.getElementById('best').textContent=best;
-  finalScore.textContent=`💥 GAME OVER — SCORE: ${Math.floor(score)}`;
-  setTimeout(()=>{ overlay.classList.remove('hidden'); timeScale=1; },1300);
+function note(t,bad){const n=$('note');n.textContent=t;n.className='note'+(bad?' bad':'');n.hidden=!t}
+
+/* ---- ธีมท้องฟ้า: crossfade 2 ชั้น + ดวงอาทิตย์/จันทร์ ---- */
+let skyFlip=false;
+function setTheme(day,wet){
+ const cls='t-'+(day?'day':'night')+'-'+(wet?'wet':'dry');
+ document.body.className=cls;
+ const next=skyFlip?$('skyA'):$('skyB'),prev=skyFlip?$('skyB'):$('skyA');
+ skyFlip=!skyFlip;next.classList.add('on');prev.classList.remove('on');
+ const orb=$('orb');
+ orb.textContent=day?'☀️':'🌙';
+ orb.classList.toggle('moon',!day);
+ document.querySelector('meta[name=theme-color]').content=getComputedStyle(document.body).getPropertyValue('--sky1').trim()||'#5AA7E8';
 }
 
-// ================= Main loop =================
-const clock = new THREE.Clock();
-let travel = 0;
-
-function animate(){
-  requestAnimationFrame(animate);
-  const rawDt = Math.min(clock.getDelta(), .05);
-  const dt = rawDt * timeScale;
-  const t = clock.elapsedTime;
-  travel += speed*dt;
-
-  starLayers.forEach(l=>{ l.pts.position.z = (travel*l.par)%400; });
-  nebulae.forEach((n,i)=>{ n.material.rotation += dt*.02*(i%2?1:-1); });
-
-  for(let i=0;i<AST;i++){
-    const a = astData[i];
-    a.z += speed*dt*.85;
-    if(a.z>20){ a.z-=340; a.a=Math.random()*Math.PI*2; a.r=8+Math.random()*40; }
-    dummy.position.set(Math.cos(a.a)*a.r, Math.sin(a.a)*a.r*.6+3, a.z);
-    dummy.rotation.set(t*a.spin*4, t*a.spin*6, 0);
-    dummy.scale.setScalar(a.s);
-    dummy.updateMatrix();
-    astMesh.setMatrixAt(i, dummy.matrix);
-  }
-  astMesh.instanceMatrix.needsUpdate = true;
-
-  if (running){
-    speed += dt*.6;
-    score += dt*speed;
-
-    const mv = 11*dt;
-    if(keys['arrowleft']||keys['a']) tx=Math.max(tx-mv,-6);
-    if(keys['arrowright']||keys['d']) tx=Math.min(tx+mv,6);
-    if(keys['arrowup']||keys['w']) ty=Math.min(ty+mv*.7,7);
-    if(keys['arrowdown']||keys['s']) ty=Math.max(ty-mv*.7,.4);
-
-    const px = shipG.position.x, py = shipG.position.y;
-    shipG.position.x += (tx-px)*Math.min(1,dt*8);
-    shipG.position.y += (ty-py)*Math.min(1,dt*8);
-    const vx = (shipG.position.x-px)/Math.max(dt,.001);
-
-    shipG.rotation.z = THREE.MathUtils.lerp(shipG.rotation.z, -vx*.045, .15);
-    shipG.rotation.x = THREE.MathUtils.lerp(shipG.rotation.x,
-      -(ty-shipG.position.y)*.06, .12);
-    shipG.rotation.y = -vx*.02;
-
-    engine.scale.setScalar(1.1 + Math.sin(t*28)*.22 + speed*.015); // ลดจาก 1.3 ฐาน
-    camera.fov = 72 + speed*.28; camera.updateProjectionMatrix();
-    shipLight.position.copy(shipG.position);
-    shipLight.position.z += 1;
-
-    trailHist.unshift(shipG.position.clone());
-    if(trailHist.length>TRAIL) trailHist.pop();
-    for(let i=0;i<TRAIL;i++){
-      const p = trailHist[Math.min(i,trailHist.length-1)] || shipG.position;
-      trailPos[i*3]=p.x; trailPos[i*3+1]=p.y; trailPos[i*3+2]=p.z+.9;
-    }
-    trailGeo.attributes.position.needsUpdate = true;
-    trail.material.opacity = Math.min(.55, speed/40); // ลดเพดานจาก .75
-
-    for(let i=0;i<SL;i++){
-      slPos[i*6+2]+=speed*dt*1.6*slVel[i]; slPos[i*6+5]+=speed*dt*1.6*slVel[i];
-      if(slPos[i*6+2]>10){
-        const x=(Math.random()-.5)*24, y=Math.random()*12-1, z=-60-Math.random()*20;
-        slPos[i*6]=x; slPos[i*6+1]=y; slPos[i*6+2]=z;
-        slPos[i*6+3]=x; slPos[i*6+4]=y; slPos[i*6+5]=z+.8+Math.random()*1.6;
-      }
-    }
-    slGeo.attributes.position.needsUpdate = true;
-    speedLines.material.opacity = Math.min(.4, speed/70); // ลดจาก .5
-
-    for (const o of obstacles){
-      o.position.z += speed*dt;
-      o.rotation.x += o.userData.spin; o.rotation.y += o.userData.spin*1.3;
-      o.userData.pulse += dt*3;
-      const s = 1 + Math.sin(o.userData.pulse)*.07;
-      o.scale.setScalar(s);
-      if (o.position.z > 14){ o.position.z = -160-Math.random()*60;
-        o.position.x=(Math.random()-.5)*14; o.position.y=Math.random()*8-.5; }
-      if (Math.abs(o.position.z-shipG.position.z)<1.1 &&
-          Math.abs(o.position.x-shipG.position.x)<(o.userData.w/2+.55) &&
-          Math.abs(o.position.y-shipG.position.y)<(o.userData.h/2+.55)){
-        gameOver(); break;
-      }
-    }
-
-    streakTimer -= dt;
-    if(streakTimer<=0 && streak>0){ streak=0; streakEl.style.opacity=0; }
-    for (const o of orbs){
-      o.position.z += speed*dt;
-      o.rotation.y += dt*5; o.rotation.x += dt*3;
-      o.scale.setScalar(1+Math.sin(t*6)*.15);
-      if (o.position.z > 14){ o.position.z = -170-Math.random()*40;
-        o.position.x=(Math.random()-.5)*12; o.position.y=Math.random()*8; }
-      if (o.position.distanceTo(shipG.position)<1.3){
-        streak++; streakTimer=3;
-        const mult = streak>=8?5:streak>=4?3:streak>=2?2:1;
-        score += 50*mult;
-        streakEl.textContent = streak>1 ? `🔥 COMBO x${mult} (streak ${streak})` : '';
-        streakEl.style.opacity = streak>1?1:0;
-        explode(o.position.clone(), 0xffcc00, 60);
-        o.position.z = -170-Math.random()*40; o.position.x=(Math.random()-.5)*12;
-      }
-    }
-    scoreEl.textContent = Math.floor(score);
-    speedoEl.textContent = Math.floor(speed*12);
-  }
-
-  if (burst){
-    const p=burst.pts.geometry.attributes.position;
-    for(let i=0;i<p.count;i++){
-      p.array[i*3]+=burst.vel[i].x*dt; p.array[i*3+1]+=burst.vel[i].y*dt;
-      p.array[i*3+2]+=burst.vel[i].z*dt;
-      burst.vel[i].multiplyScalar(.97);
-    }
-    p.needsUpdate=true; burst.life-=dt;
-    burst.pts.material.opacity = Math.max(burst.life,0);
-    if(burst.life<=0){scene.remove(burst.pts);burst=null;}
-  }
-
-  shake = Math.max(0, shake - rawDt*1.4);
-  const shx=(Math.random()-.5)*shake*.6, shy=(Math.random()-.5)*shake*.6;
-  camera.position.x += ((shipG.position.x*.45)+shx - camera.position.x)*Math.min(1,rawDt*5);
-  camera.position.y += ((shipG.position.y+1.2)+shy - camera.position.y)*Math.min(1,rawDt*5);
-  camera.lookAt(shipG.position.x*.5, shipG.position.y*.7, -12);
-
-  composer.render();
+/* ---- สรุปอัตโนมัติ: "ตอนนี้ฝนตก ฝนจะหยุดราว 17:00 น." ---- */
+function summarize(hs){
+ const c0=catOf(hs[0]),w0=isWet(c0);
+ let change=-1;
+ for(let i=1;i<Math.min(hs.length,24);i++){if(isWet(catOf(hs[i]))!==w0){change=i;break}}
+ let s='ตอนนี้'+({wet:'ฝนกำลังตก',drizzle:'มีฝนปรอย ๆ',thunder:'มีพายุฝนฟ้าคะนอง',clear:'ฟ้าโล่ง ไม่มีฝน',partly:'ฟ้าใส มีเมฆบาง',cloudy:'ฟ้าครึ้ม แต่ยังไม่มีฝน',fog:'มีหมอก',snow:'หิมะกำลังตก'}[c0]);
+ if(change>0){
+  const t=new Date(hs[change].t*1000),hh=t.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+  s+=w0?' · ฝนจะหยุดราว '+hh+' น.':' · ฝนจะเริ่มราว '+hh+' น.';
+  const t0=new Date(hs[0].t*1000);
+  if(t.getDate()!==t0.getDate())s+=' (พรุ่งนี้)';
+ }else s+=w0?' · และคาดว่าฝนจะตกต่อเนื่องยาวถึง 24 ชม.':' · ไม่มีฝนถึงพรุ่งนี้เวลานี้เลย';
+ return s;
 }
-animate();
 
-addEventListener('resize', ()=>{
-  camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth,innerHeight);
-  composer.setSize(innerWidth,innerHeight);
-});
+function render(){
+ if(!cur)return;
+ const H=cur.h;
+ const i0=Math.max(0,H.time.findIndex(t=>t*1000>Date.now()-18e5));
+ const hs=[];for(let i=i0;i<Math.min(i0+24,H.time.length);i++)hs.push({t:H.time[i],pp:H.pp[i],pc:H.pc[i],code:H.code[i],temp:H.temp[i],isday:H.isday[i]});
+ if(!hs.length){note('ยังไม่มีข้อมูลพยากรณ์ของช่วงเวลานี้',1);return}
+ note('');
+ // ธีมจากชั่วโมงปัจจุบัน
+ setTheme(!!hs[0].isday,isWet(catOf(hs[0])));
+ // การ์ดตอนนี้
+ const c0=catOf(hs[0]);
+ $('now').hidden=false;
+ $('nw-icon').textContent=ICON[grp(hs[0].code)][hs[0].isday?0:1];
+ $('nw-temp').innerHTML=Math.round(hs[0].temp)+'<small>°C</small>';
+ $('nw-label').textContent=LABEL[c0]||LABEL[grp(hs[0].code)];
+ $('nw-pp').textContent=hs[0].pp==null?'—':hs[0].pp+'%';
+ $('nw-mm').textContent=hs[0].pc==null?'—':hs[0].pc+' มม.';
+ $('nw-sum').textContent=summarize(hs);
+ // ไทม์ไลน์
+ $('dh').hidden=false;
+ const today=new Date().getDate();
+ let tot=0;hs.forEach(h=>{tot+=h.pc||0});
+ $('tot').textContent='รวม ~'+Math.round(tot)+' มม.';
+ $('tl').replaceChildren(...hs.map((h,i)=>{
+  const d=document.createElement('div'),c=catOf(h);
+  d.className='h '+(i===0?'now ':'')+(isWet(c)?'wet':'');
+  const dt=new Date(h.t*1000);
+  const tm=document.createElement('time');tm.textContent=(dt.getDate()!==today?'พรุ่งนี้ ':'')+dt.toLocaleTimeString('th-TH',{hour:'2-digit'})+':00';
+  const ic=document.createElement('div');ic.className='ic';ic.textContent=ICON[grp(h.code)][h.isday?0:1];
+  const tp=document.createElement('div');tp.className='tp';tp.textContent=Math.round(h.temp)+'°';
+  const pp=document.createElement('span');
+  if(h.pp!=null){pp.className='pp '+(h.pp>=60?'hi':h.pp>=30?'md':'lo');pp.textContent='💧'+h.pp+'%'}
+  const mm=document.createElement('div');mm.className='mm';mm.textContent=(h.pc!=null&&h.pc>0)?h.pc+' มม.':'';
+  d.append(tm,ic,tp,pp,mm);
+  d.style.animationDelay=(i*0.035)+'s';
+  return d;
+ }));
+ // เลื่อนไป "ตอนนี้"
+ requestAnimationFrame(()=>{$('tl').scrollTo({left:0,behavior:'instant' in window?'instant':'auto'})});
+ const m=(Date.now()-cur.ts)/6e4,ago=m<1?'เมื่อสักครู่':m<60?Math.round(m)+' นาทีที่แล้ว':Math.floor(m/60)+' ชม. '+Math.round(m%60)+' นาทีที่แล้ว';
+ $('upd').textContent='📍 '+(cur.name||'จุดที่เลือก')+' · อัปเดต '+ago+' (แตะเพื่อรีเฟรช)';
+}
+
+async function load(lat,lon,name){
+ $('upd').classList.add('spin');
+ try{
+  const u=API+'?latitude='+lat+'&longitude='+lon+'&timezone=Asia%2FBangkok&timeformat=unixtime&forecast_days=2&hourly=precipitation_probability,precipitation,weathercode,temperature_2m,cloud_cover,is_day';
+  const r=await fetch(u);if(!r.ok)throw new Error('HTTP '+r.status);
+  const j=await r.json(),H=j.hourly;
+  cur={lat,lon,name,ts:Date.now(),h:{time:H.time,pp:H.precipitation_probability,pc:H.precipitation,code:H.weathercode,temp:H.temperature_2m,cloud:H.cloud_cover,isday:H.is_day}};
+  try{localStorage.setItem('raindata',JSON.stringify(cur));localStorage.setItem('rainloc',JSON.stringify({lat,lon,name}))}catch(e){}
+  render();
+ }catch(e){
+  if(cur)note('อัปเดตไม่สำเร็จ ('+e.message+') — แสดงข้อมูลล่าสุดที่เก็บไว้',1);
+  else note('ดึงข้อมูลไม่ได้ ('+e.message+') ตรวจสัญญาณเน็ตแล้วลองอีกครั้ง',1);
+ }
+ $('upd').classList.remove('spin');
+}
+
+/* ---- ตำแหน่ง / ค้นหา ---- */
+$('gps').onclick=()=>{
+ if(!navigator.geolocation){note('เบราว์เซอร์นี้ไม่รองรับ GPS',1);return}
+ $('gps').textContent='📡 กำลังหาตำแหน่ง…';
+ navigator.geolocation.getCurrentPosition(p=>{
+  $('gps').textContent='📍 ใช้ตำแหน่งของฉัน';
+  load(p.coords.latitude,p.coords.longitude,'ตำแหน่งของคุณ');
+ },e=>{
+  $('gps').textContent='📍 ใช้ตำแหน่งของฉัน';
+  note(e.code===1?'🚫 ถูกบล็อกสิทธิ์ตำแหน่ง — แตะ 🔒 หน้า URL → Permissions → Location → Allow':e.code===2?'📵 ปิด GPS ของเครื่องอยู่ — เปิด Location services ก่อน':'⏱️ หาตำแหน่งไม่เจอใน 15 วิ ลองอีกครั้ง',1);
+ },{timeout:15000,maximumAge:600000});
+};
+$('find').onclick=async()=>{
+ const q=$('q').value.trim();if(!q)return;
+ try{
+  const r=await fetch('https://geocoding-api.open-meteo.com/v1/search?count=4&language=th&name='+encodeURIComponent(q)).then(r=>r.json());
+  $('chips').replaceChildren(...(r.results||[]).map(p=>{
+   const b=document.createElement('button');b.type='button';
+   b.textContent='📍 '+p.name+(p.admin1?' · '+p.admin1:'');
+   b.onclick=()=>{$('chips').replaceChildren();load(p.latitude,p.longitude,p.name)};
+   return b;
+  }));
+  if(!r.results||!r.results.length)note('ค้นหา "'+q+'" ไม่เจอ ลองชื่อใกล้เคียง',1);else note('');
+ }catch(e){note('ค้นหาไม่ได้ ('+e.message+')',1)}
+};
+$('q').addEventListener('keydown',e=>{if(e.key==='Enter')$('find').click()});
+
+/* ---- รีเฟรช: แตะบรรทัดอัปเดต ---- */
+$('upd').onclick=()=>{if(cur)load(cur.lat,cur.lon,cur.name)};
+
+/* ---- โหลดครั้งแรก: แสดงของเก่าทันที แล้วดึงใหม่ถ้าเก่าเกิน 10 นาที ---- */
+(function init(){
+ try{const s=JSON.parse(localStorage.getItem('raindata'));if(s&&s.h&&s.h.time&&s.h.time.length)cur=s}catch(e){}
+ if(cur)render();else $('upd').textContent='เลือกตำแหน่งเพื่อเริ่ม';
+ try{
+  const L=JSON.parse(localStorage.getItem('rainloc'));
+  if(L&&(!cur||Date.now()-cur.ts>6e5))load(L.lat,L.lon,L.name);
+ }catch(e){}
+})();
+/* อัปเดตอัตโนมัติทุก 10 นาที ถ้าแท็บกำลังมองเห็นและข้อมูลเก่าเกิน 10 นาที */
+setInterval(()=>{if(cur&&cur.lat&&document.visibilityState==='visible'&&Date.now()-cur.ts>6e5)load(cur.lat,cur.lon,cur.name)},6e5);
 </script>
 </body>
 </html>
