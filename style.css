@@ -1,0 +1,193 @@
+/* ==========================================================================
+   style.css — ทำนายฝน 🌦️ SKY EDITION
+   ธีมท้องฟ้าที่มีชีวิต: เปลี่ยนสีตามสภาพอากาศจริง 4 โหมด
+   t-day-dry (ฟ้าใส) / t-day-wet (วันฝน) / t-night-dry (คืนฟ้าโล่ง) / t-night-wet (คืนฝน)
+   เมฆลอย + ฝนตก + ดวงอาทิตย์/ดวงจันทร์เรืองแสง ทั้งหมดเป็น CSS ล้วน
+   ========================================================================== */
+
+/* ============================ 🎨 ตัวแปรธีม ============================ */
+:root{
+  --ink:#0E2238;--mute:#5A7184;
+  --panel:rgba(255,255,255,.66);--panel-solid:#FFFFFF;
+  --line:rgba(30,80,140,.16);
+  --accent:#1D6FD1;--accent2:#3AA0E8;
+  --r:1.25rem;
+  --shadow:0 2px 10px rgba(15,45,85,.10),0 14px 40px rgba(15,45,85,.14);
+  --glow:0 0 18px rgba(80,170,255,.35);
+  --sky1:#5AA7E8;--sky2:#9CCBF0;--sky3:#EAF6FF;
+  --wet-glow:transparent;
+}
+body.t-day-wet{
+  --ink:#EAF4FF;--mute:#A9C4D8;
+  --panel:rgba(13,28,45,.58);--panel-solid:#122539;
+  --line:rgba(140,200,255,.20);
+  --accent:#7CC7FF;--accent2:#4A9FE0;
+  --shadow:0 2px 10px rgba(0,10,25,.35),0 14px 40px rgba(0,10,25,.5);
+  --sky1:#31465C;--sky2:#4A6478;--sky3:#6E8899;
+}
+body.t-night-dry{
+  --ink:#E8EFFC;--mute:#93A8C9;
+  --panel:rgba(12,20,42,.6);--panel-solid:#101A33;
+  --line:rgba(140,175,255,.18);
+  --accent:#8FB8FF;--accent2:#5E85D6;
+  --shadow:0 2px 10px rgba(0,5,20,.4),0 14px 40px rgba(0,5,20,.55);
+  --sky1:#0A0F22;--sky2:#1A2A52;--sky3:#2C4472;
+}
+body.t-night-wet{
+  --ink:#E8EFFC;--mute:#8FA6BC;
+  --panel:rgba(8,15,28,.62);--panel-solid:#0D1826;
+  --line:rgba(130,190,255,.16);
+  --accent:#7CC7FF;--accent2:#4A86C0;
+  --shadow:0 2px 10px rgba(0,5,15,.45),0 14px 40px rgba(0,5,15,.6);
+  --sky1:#070B16;--sky2:#101E2E;--sky3:#1B3242;
+}
+
+/* ============================ 🌤️ ชั้นท้องฟ้า (crossfade) ============================ */
+#skyA,#skyB{position:fixed;inset:0;z-index:-4;pointer-events:none;
+  background:linear-gradient(180deg,var(--sky1) 0%,var(--sky2) 55%,var(--sky3) 100%);
+  opacity:0;transition:opacity 1.4s ease}
+#skyA.on,#skyB.on{opacity:1}
+
+/* เมฆลอย 2 ชั้น */
+body::before{content:"";position:fixed;inset:0;z-index:-3;pointer-events:none;
+  background:
+   radial-gradient(18rem 6rem at 20% 12%,rgba(255,255,255,.85),transparent 70%),
+   radial-gradient(26rem 8rem at 70% 22%,rgba(255,255,255,.7),transparent 70%),
+   radial-gradient(15rem 5rem at 45% 8%,rgba(255,255,255,.8),transparent 70%),
+   radial-gradient(22rem 7rem at 90% 10%,rgba(255,255,255,.55),transparent 70%),
+   radial-gradient(20rem 6rem at 5% 30%,rgba(255,255,255,.5),transparent 70%),
+   radial-gradient(18rem 6rem at 60% 35%,rgba(255,255,255,.45),transparent 70%);
+  filter:blur(6px);
+  animation:cloudDrift 90s linear infinite alternate;
+  transition:opacity 1.4s;
+}
+body.t-night-dry::before,body.t-night-wet::before{opacity:.28;filter:blur(6px) brightness(.7)}
+body.t-day-wet::before,body.t-night-wet::before{opacity:.85}
+@keyframes cloudDrift{from{background-position:0 0,0 0,0 0,0 0,0 0,0 0}to{background-position:24rem 0,-30rem 2rem,18rem 0,-14rem 1rem,10rem 3rem,-22rem 2rem}}
+
+/* ฝนตก (เปิดเมื่อธีม wet) */
+body::after{content:"";position:fixed;inset:-25% 0;z-index:-2;pointer-events:none;opacity:0;
+  background:repeating-linear-gradient(14deg,transparent 0 11px,rgba(190,225,255,.33) 11px 12px,transparent 12px 24px);
+  background-size:100% 48px;
+  -webkit-mask-image:linear-gradient(180deg,transparent,#000 18%);
+  mask-image:linear-gradient(180deg,transparent,#000 18%);
+  transition:opacity 1s;
+}
+body.t-day-wet::after,body.t-night-wet::after{opacity:.8;animation:rainFall .5s linear infinite}
+@keyframes rainFall{to{background-position:0 48px}}
+
+/* ดวงอาทิตย์/ดวงจันทร์ */
+#orb{position:fixed;top:4.5rem;right:7%;z-index:-1;pointer-events:none;font-size:4.2rem;line-height:1;
+  filter:drop-shadow(0 0 26px rgba(255,225,130,.9)) drop-shadow(0 0 70px rgba(255,200,80,.5));
+  animation:orbFloat 8s ease-in-out infinite alternate;transition:opacity 1.4s,filter 1.4s}
+#orb.moon{filter:drop-shadow(0 0 22px rgba(200,220,255,.85)) drop-shadow(0 0 60px rgba(140,170,255,.4))}
+@keyframes orbFloat{from{transform:translateY(0)}to{transform:translateY(-14px)}}
+
+/* ============================ 📐 พื้นฐาน ============================ */
+[hidden]{display:none!important}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{margin:0;min-height:100%;color:var(--ink);
+  font:400 1rem/1.65 "Noto Sans Thai",system-ui,sans-serif;-webkit-font-smoothing:antialiased;
+  padding-top:env(safe-area-inset-top);transition:color .8s;overflow-x:hidden}
+main{max-width:36rem;margin:0 auto;padding:1.4rem 1rem 3.5rem;position:relative;z-index:1}
+h1{margin:0;font-size:1.7rem;font-weight:800;letter-spacing:.01em;
+  text-shadow:0 2px 14px rgba(0,40,90,.15)}
+body.t-day-wet h1,body.t-night-dry h1,body.t-night-wet h1{text-shadow:0 2px 16px rgba(0,10,30,.5)}
+#upd{margin:.2rem 0 .6rem;font-size:.88rem;color:var(--mute);cursor:pointer;user-select:none;
+  display:inline-flex;align-items:center;gap:.4rem}
+#upd:active{opacity:.6}
+#upd.spin::before{content:"";width:.85rem;height:.85rem;border-radius:50%;
+  border:2px solid var(--accent);border-top-color:transparent;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tip{margin:.45rem .25rem;color:var(--mute);font-size:.85rem}
+a{color:var(--accent)}
+:focus-visible{outline:3px solid var(--accent2);outline-offset:3px;border-radius:.6rem}
+
+/* ============================ 📢 แถบแจ้งเตือน ============================ */
+.note{margin:.7rem 0;padding:.75rem 1rem;border-radius:1rem;font-size:.9rem;font-weight:600;
+  background:rgba(255,200,80,.18);color:#B45309;border:1px solid rgba(255,180,60,.45);
+  animation:slideIn .4s cubic-bezier(.2,.8,.2,1)}
+body.t-day-wet .note,body.t-night-dry .note,body.t-night-wet .note{color:#FFD9A0;border-color:rgba(255,190,90,.4)}
+.note.bad{background:rgba(255,90,90,.16);border-color:rgba(255,90,90,.5)}
+@keyframes slideIn{from{opacity:0;transform:translateY(-8px)}}
+
+/* ============================ 🔘 ปุ่ม + ค้นหา ============================ */
+button{font:inherit;font-weight:700;cursor:pointer;transition:transform .15s,box-shadow .25s,filter .2s}
+button:active{transform:scale(.97)}
+#gps{width:100%;margin-top:.5rem;padding:.85rem 1rem;border:0;border-radius:999px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:1rem;
+  box-shadow:0 8px 24px rgba(30,110,200,.35),var(--shadow)}
+#gps:hover{filter:brightness(1.08)}
+.srow{display:flex;gap:.5rem;margin-top:.6rem}
+.srow input{flex:1;min-width:0;padding:.7rem 1rem;border-radius:999px;border:1px solid var(--line);
+  background:var(--panel);color:var(--ink);font:inherit;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:var(--shadow)}
+.srow input::placeholder{color:var(--mute)}
+.srow button{padding:.7rem 1.1rem;border:0;border-radius:999px;
+  background:var(--panel);color:var(--accent);border:1.5px solid color-mix(in srgb,var(--accent) 50%,transparent);
+  backdrop-filter:blur(10px)}
+#chips{display:flex;flex-wrap:wrap;gap:.4rem;margin:.55rem 0 0}
+#chips:empty{display:none}
+#chips button{padding:.4rem .85rem;border-radius:999px;border:1px solid var(--line);
+  background:var(--panel);color:var(--ink);font-size:.85rem;font-weight:600;
+  backdrop-filter:blur(8px);animation:chipIn .3s cubic-bezier(.2,.8,.2,1) both}
+@keyframes chipIn{from{opacity:0;transform:translateY(6px) scale(.92)}}
+
+/* ============================ 🏠 การ์ด "ตอนนี้" ============================ */
+#now{position:relative;overflow:hidden;margin:.9rem 0 .4rem;padding:1.5rem 1.4rem 1.3rem;border-radius:var(--r);
+  background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  animation:rise .6s cubic-bezier(.2,.8,.2,1) both}
+#now .row1{display:flex;align-items:center;gap:1.1rem}
+#nw-icon{font-size:4rem;line-height:1;filter:drop-shadow(0 4px 14px rgba(0,30,70,.3));
+  animation:iconFloat 5s ease-in-out infinite alternate}
+body.t-day-wet #nw-icon,body.t-night-wet #nw-icon{filter:drop-shadow(0 4px 14px rgba(0,0,0,.5))}
+@keyframes iconFloat{from{transform:translateY(0)}to{transform:translateY(-7px)}}
+#nw-main{flex:1;min-width:0}
+#nw-temp{margin:0;font-size:2.6rem;font-weight:800;line-height:1.1}
+#nw-temp small{font-size:1.1rem;font-weight:600;color:var(--mute)}
+#nw-label{margin:.15rem 0 0;font-size:1.02rem;font-weight:700}
+#nw-meta{display:flex;gap:1rem;margin-top:.5rem;font-size:.88rem;flex-wrap:wrap}
+#nw-meta b{font-size:1.05rem}
+#nw-sum{margin:.9rem 0 0;padding:.85rem 1rem;border-radius:.9rem;font-size:.95rem;font-weight:600;
+  background:color-mix(in srgb,var(--accent) 12%,transparent);
+  border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);
+  animation:rise .6s .15s cubic-bezier(.2,.8,.2,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}}
+
+/* ============================ ⏱️ ไทม์ไลน์ 24 ชม. ============================ */
+#dh{margin:1.4rem .25rem .4rem;display:flex;justify-content:space-between;align-items:baseline;gap:.6rem}
+#dh span{font-size:.82rem;color:var(--mute);font-weight:600}
+#tl{display:flex;gap:.5rem;overflow-x:auto;padding:.8rem .6rem 1rem;margin:.3rem -.6rem 0;
+  scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:thin;
+  scrollbar-color:color-mix(in srgb,var(--accent) 60%,transparent) transparent}
+#tl::-webkit-scrollbar{height:6px}
+#tl::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--accent) 45%,transparent);border-radius:999px}
+.h{flex:0 0 auto;width:4.6rem;scroll-snap-align:center;display:flex;flex-direction:column;align-items:center;gap:.28rem;
+  padding:.75rem .4rem .65rem;border-radius:1rem;border:1px solid var(--line);
+  background:var(--panel);box-shadow:0 2px 8px rgba(10,30,60,.08);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  animation:cellIn .5s cubic-bezier(.2,.8,.2,1) both}
+@keyframes cellIn{from{opacity:0;transform:translateY(12px) scale(.92)}}
+.h.now{border:1.5px solid var(--accent);box-shadow:var(--glow),var(--shadow)}
+.h.now::before{content:"ตอนนี้";font-size:.62rem;font-weight:800;color:#fff;background:var(--accent);
+  padding:.1rem .5rem;border-radius:999px;letter-spacing:.03em;animation:pulse 2s ease-out infinite}
+@keyframes pulse{from{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 60%,transparent)}to{box-shadow:0 0 0 .55rem transparent}}
+.h time{font-size:.78rem;color:var(--mute);font-weight:700;font-variant-numeric:tabular-nums}
+.h.now time{color:var(--accent)}
+.h .ic{font-size:1.7rem;line-height:1;filter:drop-shadow(0 2px 6px rgba(0,20,60,.25))}
+.h .tp{font-size:.82rem;font-weight:700}
+.h .pp{font-size:.72rem;font-weight:700;padding:.08rem .45rem;border-radius:999px}
+.pp.hi{background:rgba(60,130,255,.25);color:#1D4ED8}
+body.t-day-wet .pp.hi,body.t-night-dry .pp.hi,body.t-night-wet .pp.hi{color:#9CD2FF}
+.pp.md{background:rgba(60,130,255,.12);color:#3A6EA8}
+.pp.lo{background:rgba(120,140,160,.14);color:var(--mute)}
+.h .mm{font-size:.72rem;color:var(--accent);font-weight:700;min-height:1em}
+.h.wet{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 20%,var(--panel)),var(--panel))}
+.h.wet .ic{filter:drop-shadow(0 0 10px color-mix(in srgb,var(--accent) 70%,transparent))}
+
+/* ============================ 📋 ท้ายหน้า ============================ */
+.fine{margin:1.2rem .25rem 0;color:var(--mute);font-size:.78rem;line-height:1.6}
+
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
